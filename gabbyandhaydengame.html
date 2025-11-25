@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gabby’s Dollhouse – Memory Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #fef4ff;
+      padding: 16px;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.4rem;
+      margin-bottom: 0.25rem;
+      color: #7b3fbf;
+    }
+
+    p {
+      text-align: center;
+      font-size: 0.9rem;
+      margin-top: 0;
+      margin-bottom: 1rem;
+      max-width: 480px;
+      color: #555;
+    }
+
+    .game-container {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(90px, 120px)); /* 4 x 4 grid = 16 slots, we’ll just use 14 cards + 2 empty spots visually */
+      gap: 12px;
+      margin-top: 8px;
+      max-width: 520px;
+      justify-content: center;
+    }
+
+    .card {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      perspective: 800px;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.4s ease;
+      border-radius: 12px;
+    }
+
+    .card.flipped .card-inner,
+    .card.matched .card-inner {
+      transform: rotateY(180deg);
+      cursor: default;
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-front {
+      background: #ffffff;
+      border: 2px solid #ffb4e6;
+      transform: rotateY(180deg);
+    }
+
+    .card-front img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .card-back {
+      background: radial-gradient(circle at top, #ffe0f7, #ffc6f4, #fdd6ff);
+      border: 2px solid #ff8fdc;
+      color: #7b3fbf;
+      font-weight: bold;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      text-align: center;
+      padding: 4px;
+    }
+
+    .status {
+      margin-top: 12px;
+      font-size: 0.9rem;
+      min-height: 1.5em;
+      text-align: center;
+      color: #7b3fbf;
+    }
+
+    .controls {
+      margin-top: 8px;
+    }
+
+    .controls button {
+      padding: 6px 14px;
+      font-size: 0.9rem;
+      border-radius: 999px;
+      border: none;
+      background: #ff8fdc;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .controls button:hover {
+      background: #f06ac4;
+    }
+
+    @media (max-width: 600px) {
+      .game-container {
+        grid-template-columns: repeat(3, minmax(90px, 110px));
+        max-width: 360px;
+      }
+      .card-back {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Gabby’s Dollhouse – Memory Game</h1>
+  <p>
+    Tap a card to flip it over. Try to find the matching pairs of Gabby and all her kitty friends!
+  </p>
+
+  <div class="game-container" id="game"></div>
+
+  <div class="status" id="status"></div>
+
+  <div class="controls">
+    <button id="resetBtn">Play Again</button>
+  </div>
+
+  <script>
+    // 💾 Make sure these filenames match what you uploaded to GitHub
+    const characters = [
+      { name: "MERCAT",   img: "mercat.png"   },
+      { name: "DJ_CATNIP",img: "djcatnip.png" },
+      { name: "PANDY",    img: "pandy.png"    },
+      { name: "BABYBOX",  img: "babybox.png"  },
+      { name: "PILLOWCAT",img: "pillowcat.png"},
+      { name: "GABBY",    img: "gabby.png"    },
+      { name: "CAKEY",    img: "cakey.png"    }
+    ];
+
+    let deck = [];
+    const gameEl = document.getElementById("game");
+    const statusEl = document.getElementById("status");
+    const resetBtn = document.getElementById("resetBtn");
+
+    let firstCard = null;
+    let secondCard = null;
+    let lockBoard = false;
+    let matchesFound = 0;
+
+    function createDeck() {
+      const pairs = [];
+      characters.forEach(char => {
+        pairs.push({ ...char, id: char.name + "_1" });
+        pairs.push({ ...char, id: char.name + "_2" });
+      });
+      // Fisher–Yates shuffle
+      for (let i = pairs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+      }
+      deck = pairs;
+    }
+
+    function renderBoard() {
+      gameEl.innerHTML = "";
+      deck.forEach(cardData => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.name = cardData.name;
+
+        const inner = document.createElement("div");
+        inner.className = "card-inner";
+
+        const back = document.createElement("div");
+        back.className = "card-face card-back";
+        back.textContent = "Tap to Flip";
+
+        const front = document.createElement("div");
+        front.className = "card-face card-front";
+
+        const img = document.createElement("img");
+        img.src = cardData.img;
+        img.alt = cardData.name;
+        front.appendChild(img);
+
+        inner.appendChild(back);
+        inner.appendChild(front);
+        card.appendChild(inner);
+        gameEl.appendChild(card);
+
+        card.addEventListener("click", () => handleCardClick(card));
+      });
+    }
+
+    function resetGame() {
+      firstCard = null;
+      secondCard = null;
+      lockBoard = false;
+      matchesFound = 0;
+      statusEl.textContent = "";
+      createDeck();
+      renderBoard();
+    }
+
+    function handleCardClick(card) {
+      if (lockBoard) return;
+      if (card.classList.contains("flipped") || card.classList.contains("matched")) return;
+
+      card.classList.add("flipped");
+
+      if (!firstCard) {
+        firstCard = card;
+        return;
+      }
+
+      secondCard = card;
+      checkForMatch();
+    }
+
+    function checkForMatch() {
+      const isMatch = firstCard.dataset.name === secondCard.dataset.name;
+      if (isMatch) {
+        handleMatch();
+      } else {
+        handleNoMatch();
+      }
+    }
+
+    function handleMatch() {
+      firstCard.classList.add("matched");
+      secondCard.classList.add("matched");
+      firstCard = null;
+      secondCard = null;
+      matchesFound++;
+
+      if (matchesFound === characters.length) {
+        statusEl.textContent = "You found all the pairs! Pawsome job!";
+      } else {
+        statusEl.textContent = "Great match! Keep going!";
+      }
+    }
+
+    function handleNoMatch() {
+      lockBoard = true;
+      statusEl.textContent = "Not a match, try again!";
+      setTimeout(() => {
+        firstCard.classList.remove("flipped");
+        secondCard.classList.remove("flipped");
+        firstCard = null;
+        secondCard = null;
+        lockBoard = false;
+      }, 900);
+    }
+
+    resetBtn.addEventListener("click", resetGame);
+
+    // Start game
+    resetGame();
+  </script>
+</body>
+</html>
