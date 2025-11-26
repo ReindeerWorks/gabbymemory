@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Different Isn’t a Dirty Word – Memory Game (Level 2)</title>
+  <title>Gabby’s Dollhouse – Memory Game</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f7f7ff;
+      background: #fef4ff;
       padding: 16px;
       margin: 0;
       display: flex;
@@ -19,6 +19,7 @@
       text-align: center;
       font-size: 1.4rem;
       margin-bottom: 0.25rem;
+      color: #7b3fbf;
     }
 
     p {
@@ -27,11 +28,12 @@
       margin-top: 0;
       margin-bottom: 1rem;
       max-width: 480px;
+      color: #555;
     }
 
     .game-container {
       display: grid;
-      grid-template-columns: repeat(4, minmax(90px, 120px)); /* 4 x 5 grid = 20 cards */
+      grid-template-columns: repeat(4, minmax(90px, 120px));
       gap: 12px;
       margin-top: 8px;
       max-width: 520px;
@@ -51,7 +53,7 @@
       position: relative;
       transform-style: preserve-3d;
       transition: transform 0.4s ease;
-      border-radius: 10px;
+      border-radius: 12px;
     }
 
     .card.flipped .card-inner,
@@ -65,7 +67,7 @@
       width: 100%;
       height: 100%;
       backface-visibility: hidden;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
       display: flex;
       align-items: center;
@@ -74,7 +76,7 @@
 
     .card-front {
       background: #ffffff;
-      border: 2px solid #b0b7ff;
+      border: 2px solid #ffb4e6;
       transform: rotateY(180deg);
     }
 
@@ -85,12 +87,12 @@
     }
 
     .card-back {
-      background: linear-gradient(135deg, #ffcfe8, #c5d5ff);
-      border: 2px solid #8ea5ff;
-      color: #333;
+      background: radial-gradient(circle at top, #ffe0f7, #ffc6f4, #fdd6ff);
+      border: 2px solid #ff8fdc;
+      color: #7b3fbf;
       font-weight: bold;
-      font-size: 0.95rem;
-      letter-spacing: 0.03em;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
       text-align: center;
       padding: 4px;
     }
@@ -100,7 +102,7 @@
       font-size: 1rem;
       min-height: 1.5em;
       text-align: center;
-      color: #333;
+      color: #7b3fbf;
       font-weight: 600;
     }
 
@@ -109,30 +111,29 @@
     }
 
     .controls button {
-      padding: 10px 22px;
+      padding: 10px 24px;
       font-size: 1rem;
       border-radius: 999px;
       border: none;
-      background: #88d498;
+      background: #ff8fdc;
       color: #fff;
       cursor: pointer;
       box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-      transform: scale(1);
-      transition: background 0.2s ease, transform 0.1s ease;
+      transition: 0.2s ease;
     }
 
     .controls button:hover {
-      background: #6fba7e;
-      transform: scale(1.03);
+      background: #f06ac4;
+      transform: scale(1.04);
     }
 
     .controls button:active {
-      transform: scale(0.97);
+      transform: scale(0.96);
     }
 
     @media (max-width: 600px) {
       .game-container {
-        grid-template-columns: repeat(3, minmax(80px, 100px));
+        grid-template-columns: repeat(3, minmax(90px, 110px));
         max-width: 360px;
       }
       .card-back {
@@ -142,10 +143,9 @@
   </style>
 </head>
 <body>
-  <h1>Different Isn’t a Dirty Word – Memory Game (Level 2)</h1>
+  <h1>Gabby’s Dollhouse – Memory Game</h1>
   <p>
-    Level 2 challenge! Tap a card to flip it over. Try to match all the different
-    Neeko, Zara, Max, and Elijah cards.
+    Tap a card to flip it over. Try to find the matching pairs of Gabby and all her kitty friends!
   </p>
 
   <div class="game-container" id="game"></div>
@@ -157,18 +157,14 @@
   </div>
 
   <script>
-    // 💾 Make sure these filenames match what you uploaded to GitHub
     const characters = [
-      { name: "NEEKO_TENNIS",  img: "Neeko3.png"  },
-      { name: "ZARA_TENNIS",   img: "Zara3.png"   },
-      { name: "MAX_TENNIS",    img: "Max3.png"    },
-      { name: "MAX_SCOPE",     img: "Max5.png"    },
-      { name: "NEEKO_MAP",     img: "Neeko5.png"  },
-      { name: "ZARA_FLY",      img: "Zara5.png"   },
-      { name: "NEEKO_JUMP",    img: "Neeko2.png"  },
-      { name: "ZARA_BALLOONS", img: "Zara2.png"   },
-      { name: "MAX_CITY",      img: "Max2.png"    },
-      { name: "ELIJAH",        img: "Elijah.png"  }
+      { name: "MERCAT",   img: "mercat.png"   },
+      { name: "DJ_CATNIP",img: "djcatnip.png" },
+      { name: "PANDY",    img: "pandy.png"    },
+      { name: "BABYBOX",  img: "babybox.png"  },
+      { name: "PILLOWCAT",img: "pillowcat.png"},
+      { name: "GABBY",    img: "gabby.png"    },
+      { name: "CAKEY",    img: "cakey.png"    }
     ];
 
     let deck = [];
@@ -187,7 +183,6 @@
         pairs.push({ ...char, id: char.name + "_1" });
         pairs.push({ ...char, id: char.name + "_2" });
       });
-      // Shuffle with Fisher–Yates
       for (let i = pairs.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
@@ -232,10 +227,9 @@
       lockBoard = false;
       matchesFound = 0;
       statusEl.textContent = "";
+      resetBtn.textContent = "Play Again?";
       createDeck();
       renderBoard();
-      // make sure the button always says "Play Again?"
-      resetBtn.textContent = "Play Again?";
     }
 
     function handleCardClick(card) {
@@ -248,7 +242,6 @@
         firstCard = card;
         return;
       }
-
       secondCard = card;
       checkForMatch();
     }
@@ -271,7 +264,6 @@
 
       if (matchesFound === characters.length) {
         statusEl.textContent = "Good job, you found them all! 🎉";
-        // Scroll status into view on mobile so she can see the message
         statusEl.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
         statusEl.textContent = "Great match! Keep going!";
@@ -292,7 +284,6 @@
 
     resetBtn.addEventListener("click", resetGame);
 
-    // Start game
     resetGame();
   </script>
 </body>
